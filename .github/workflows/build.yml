@@ -7,33 +7,33 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Xcode
-      uses: maxim-lobansky/setup-xcode@v1
-      with:
-        xcode-version: '15.4'
+    - name: Show Xcode Version
+      run: xcodebuild -version
 
-    - name: Build Archive
+    - name: Build Unsigned Archive
       run: |
         xcodebuild -project YTDownloader.xcodeproj \
           -scheme YTDownloader \
-          -sdk iphoneos \
           -configuration Release \
+          -sdk iphoneos \
           -archivePath $PWD/build/YTDownloader.xcarchive \
-          archive \
-          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
+          archive
 
-    - name: Create Unsigned IPA
+    - name: Package IPA
       run: |
         cd build
         mkdir -p Payload
         cp -r YTDownloader.xcarchive/Products/Applications/YTDownloader.app Payload/
-        zip -r YTDownloader.ipa Payload
+        zip -r -y YTDownloader.ipa Payload
         mv YTDownloader.ipa ../YTDownloader.ipa
 
     - name: Upload IPA Artifact
@@ -41,3 +41,4 @@ jobs:
       with:
         name: YTDownloader-iOS-IPA
         path: YTDownloader.ipa
+        if-no-files-found: error
